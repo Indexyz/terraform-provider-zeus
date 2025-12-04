@@ -94,7 +94,7 @@ func (d *AssignDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.Type = types.StringValue(assign.Type)
 	data.CreatedAt = types.StringValue(assign.CreatedAt)
 	data.Data, _ = types.MapValueFrom(ctx, types.StringType, assign.Data)
-	data.Leases = encodeLeases(ctx, assign.Leases)
+	data.Leases = encodeLeases(assign.Leases)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

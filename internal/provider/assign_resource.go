@@ -222,7 +222,7 @@ func (r *AssignResource) refresh(ctx context.Context, m *assignModel) error {
 		m.Data, _ = types.MapValueFrom(ctx, types.StringType, assign.Data)
 	}
 
-	m.Leases = encodeLeases(ctx, assign.Leases)
+	m.Leases = encodeLeases(assign.Leases)
 	return nil
 }
 
@@ -237,7 +237,7 @@ func leaseAttrType() types.ObjectType {
 	}
 }
 
-func encodeLeases(ctx context.Context, leases map[string]zeusapi.AddressResult) types.Map {
+func encodeLeases(leases map[string]zeusapi.AddressResult) types.Map {
 	if len(leases) == 0 {
 		return types.MapNull(leaseAttrType())
 	}
