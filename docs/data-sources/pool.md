@@ -13,6 +13,11 @@ Lookup a Zeus pool by ID
 ## Example Usage
 
 ```terraform
+provider "zeus" {
+  endpoint = "http://localhost:8080"
+  token    = "changeme"
+}
+
 data "zeus_pool" "example" {
   id = "pool-id"
 }

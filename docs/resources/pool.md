@@ -13,11 +13,20 @@ Zeus address pool
 ## Example Usage
 
 ```terraform
+provider "zeus" {
+  endpoint = "http://localhost:8080"
+  token    = "changeme"
+}
+
 resource "zeus_pool" "example" {
-  start   = 3232235777 # 192.168.1.1
-  gateway = 3232236030 # 192.168.1.254
+  start   = 3232235777 # 192.168.1.1 as integer
+  gateway = 3232236030 # 192.168.1.254 as integer
   size    = 16
   region  = "us-east-1"
+}
+
+data "zeus_pool" "by_id" {
+  id = zeus_pool.example.id
 }
 ```
 
@@ -37,7 +46,7 @@ resource "zeus_pool" "example" {
 - `end` (String)
 - `friendly_name` (String)
 - `gateway_ip` (String)
-- `id` (String)
+- `id` (String) The ID of this resource.
 - `state` (List of Number)
 
 ## Import
@@ -47,5 +56,7 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
+#!/usr/bin/env bash
+# Import an existing pool by ID
 terraform import zeus_pool.example "pool-id"
 ```

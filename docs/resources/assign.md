@@ -13,12 +13,21 @@ Assignment of addresses across regions
 ## Example Usage
 
 ```terraform
+provider "zeus" {
+  endpoint = "http://localhost:8080"
+  token    = "changeme"
+}
+
 resource "zeus_assign" "example" {
   region = ["us-east-1"]
   host   = "host-1"
   key    = "vm-123"
   type   = "vm"
   data   = { env = "dev" }
+}
+
+data "zeus_assign" "by_id" {
+  id = zeus_assign.example.id
 }
 ```
 
@@ -39,12 +48,18 @@ resource "zeus_assign" "example" {
 ### Read-Only
 
 - `created_at` (String)
-- `id` (String)
-- `leases` (Map of Object) with the following nested attributes:
-  - `address` (String)
-  - `gateway` (String)
-  - `lease_id` (String)
-  - `vlan` (Number)
+- `id` (String) The ID of this resource.
+- `leases` (Map of Object) (see [below for nested schema](#nestedatt--leases))
+
+<a id="nestedatt--leases"></a>
+### Nested Schema for `leases`
+
+Read-Only:
+
+- `address` (String)
+- `gateway` (String)
+- `lease_id` (String)
+- `vlan` (Number)
 
 ## Import
 
@@ -53,5 +68,7 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
+#!/usr/bin/env bash
+# Import an existing assign by ID
 terraform import zeus_assign.example "assign-id"
 ```

@@ -13,6 +13,11 @@ Lookup assign info by ID
 ## Example Usage
 
 ```terraform
+provider "zeus" {
+  endpoint = "http://localhost:8080"
+  token    = "changeme"
+}
+
 data "zeus_assign" "example" {
   id = "assign-id"
 }
@@ -30,9 +35,15 @@ data "zeus_assign" "example" {
 - `created_at` (String)
 - `data` (Map of String)
 - `key` (String)
-- `leases` (Map of Object) with the following nested attributes:
-  - `address` (String)
-  - `gateway` (String)
-  - `lease_id` (String)
-  - `vlan` (Number)
+- `leases` (Map of Object) (see [below for nested schema](#nestedatt--leases))
 - `type` (String)
+
+<a id="nestedatt--leases"></a>
+### Nested Schema for `leases`
+
+Read-Only:
+
+- `address` (String)
+- `gateway` (String)
+- `lease_id` (String)
+- `vlan` (Number)
