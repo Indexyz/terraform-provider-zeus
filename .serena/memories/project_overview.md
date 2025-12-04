@@ -1,0 +1,4 @@
+# Project Overview
+- Purpose: Terraform provider scaffold using Terraform Plugin Framework; currently includes example provider/resource to be customized.
+- Stack: Go 1.24; Terraform Plugin Framework; Terraform Plugin Docs, Copywrite; golangci-lint; Makefile-based tasks; Go modules.
+- Structure: main.go launches providerserver. internal/provider contains provider definition and example resource; examples/ holds TF examples; docs/ for generated docs; tools/ for go:generate utilities (tfplugindocs, copywrite, terraform fmt). Root has GNUmakefile, .golangci.yml, .copywrite.hcl, README, CHANGELOG, manifest files.

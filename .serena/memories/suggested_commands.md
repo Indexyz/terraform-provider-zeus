@@ -1,0 +1,11 @@
+# Suggested Commands
+- Build/install provider: `go install` or `make install` (builds via `go build ./...`).
+- Run full lint: `make lint` (golangci-lint run) or `golangci-lint run`.
+- Format Go: `make fmt` or `gofmt -s -w -e .`.
+- Unit tests: `make test` (go test -v -cover ./...).
+- Acceptance tests: `make testacc` (runs with TF_ACC=1; may incur real resource costs).
+- Generate docs/assets: `make generate` (runs copywrite headers, terraform fmt on examples, tfplugindocs generate).
+- Quick build only: `make build`.
+- Useful repo inspection: `rg PATTERN`, `rg --files`, `go mod tidy` when deps change.
+- Entry/serve locally: `go run .` with optional `-debug` to enable delve support; provider address currently `registry.terraform.io/hashicorp/scaffolding`.
+- General system commands (Linux): `ls`, `pwd`, `cat`, `sed -n 'start,endp' file`, `git status`, `git diff`, `find . -maxdepth 2`.

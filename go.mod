@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-scaffolding-framework
+module github.com/5aaee9/terraform-provider-zeus
 
 go 1.24.0
 
