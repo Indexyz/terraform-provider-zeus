@@ -88,7 +88,10 @@ func (p *ZeusProvider) DataSources(ctx context.Context) []func() datasource.Data
 }
 
 func (p *ZeusProvider) Functions(ctx context.Context) []func() function.Function {
-	return []func() function.Function{}
+	return []func() function.Function{
+		NewIPv4Long2IPFunction,
+		NewIPv4IP2LongFunction,
+	}
 }
 
 func New(version string) func() provider.Provider {

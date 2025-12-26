@@ -1,24 +1,35 @@
 default: fmt lint install generate
 
+CACHE_DIR := $(CURDIR)/.cache
+GO_BUILD_CACHE_DIR := $(CACHE_DIR)/go-build
+
+GO_ENV := GOCACHE=$(GO_BUILD_CACHE_DIR) XDG_CACHE_HOME=$(CACHE_DIR)
+
 build:
-	go build -v ./...
+	mkdir -p $(GO_BUILD_CACHE_DIR)
+	$(GO_ENV) go build -v ./...
 
 install: build
-	go install -v ./...
+	mkdir -p $(GO_BUILD_CACHE_DIR)
+	$(GO_ENV) go install -v ./...
 
 lint:
-	golangci-lint run
+	mkdir -p $(GO_BUILD_CACHE_DIR) $(CACHE_DIR)/golangci-lint
+	$(GO_ENV) golangci-lint run
 
 generate:
-	cd tools; go generate ./...
+	mkdir -p $(GO_BUILD_CACHE_DIR)
+	$(GO_ENV) cd tools; go generate ./...
 
 fmt:
 	gofmt -s -w -e .
 
 test:
-	go test -v -cover -timeout=120s -parallel=10 ./...
+	mkdir -p $(GO_BUILD_CACHE_DIR)
+	$(GO_ENV) go test -v -cover -timeout=120s -parallel=10 ./...
 
 testacc:
-	TF_ACC=1 go test -v -cover -timeout 120m ./...
+	mkdir -p $(GO_BUILD_CACHE_DIR)
+	TF_ACC=1 $(GO_ENV) go test -v -cover -timeout 120m ./...
 
 .PHONY: fmt lint test testacc build install generate
