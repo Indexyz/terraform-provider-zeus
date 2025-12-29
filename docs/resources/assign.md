@@ -23,7 +23,14 @@ resource "zeus_assign" "example" {
   host   = "host-1"
   key    = "vm-123"
   type   = "vm"
-  data   = { env = "dev" }
+  data = {
+    env     = "dev"
+    enabled = true
+    ports   = [80, 443]
+    meta = {
+      owner = "terraform"
+    }
+  }
 }
 
 data "zeus_assign" "by_id" {
