@@ -23,12 +23,12 @@ type AssignDataSource struct {
 }
 
 type assignDataSourceModel struct {
-	ID        types.String `tfsdk:"id"`
-	Key       types.String `tfsdk:"key"`
-	Type      types.String `tfsdk:"type"`
-	Data      types.Map    `tfsdk:"data"`
-	CreatedAt types.String `tfsdk:"created_at"`
-	Leases    types.Map    `tfsdk:"leases"`
+	ID        types.String  `tfsdk:"id"`
+	Key       types.String  `tfsdk:"key"`
+	Type      types.String  `tfsdk:"type"`
+	Data      types.Dynamic `tfsdk:"data"`
+	CreatedAt types.String  `tfsdk:"created_at"`
+	Leases    types.Map     `tfsdk:"leases"`
 }
 
 func (d *AssignDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -49,9 +49,8 @@ func (d *AssignDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 			"type": schema.StringAttribute{
 				Computed: true,
 			},
-			"data": schema.MapAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+			"data": schema.DynamicAttribute{
+				Computed: true,
 			},
 			"created_at": schema.StringAttribute{
 				Computed: true,
@@ -93,7 +92,12 @@ func (d *AssignDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	data.Key = types.StringValue(assign.Key)
 	data.Type = types.StringValue(assign.Type)
 	data.CreatedAt = types.StringValue(assign.CreatedAt)
-	data.Data, _ = types.MapValueFrom(ctx, types.StringType, assign.Data)
+	dyn, err := dynamicFromInterface(assign.Data)
+	if err != nil {
+		resp.Diagnostics.AddError("Invalid assign data", err.Error())
+		return
+	}
+	data.Data = dyn
 	data.Leases = encodeLeases(assign.Leases)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

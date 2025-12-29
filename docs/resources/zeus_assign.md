@@ -43,7 +43,7 @@ data "zeus_assign" "by_id" {
 
 ### Optional
 
-- `data` (Map of String) Arbitrary data payload
+- `data` (Dynamic) Arbitrary JSON payload
 
 ### Read-Only
 

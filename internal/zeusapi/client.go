@@ -150,11 +150,11 @@ type AddressResult struct {
 }
 
 type AssignCreateRequest struct {
-	Region []string               `json:"region"`
-	Host   string                 `json:"host"`
-	Key    string                 `json:"key"`
-	Type   string                 `json:"type"`
-	Data   map[string]interface{} `json:"data,omitempty"`
+	Region []string `json:"region"`
+	Host   string   `json:"host"`
+	Key    string   `json:"key"`
+	Type   string   `json:"type"`
+	Data   any      `json:"data,omitempty"`
 }
 
 type AssignCreateResponse struct {
@@ -167,7 +167,7 @@ type AssignInfo struct {
 	CreatedAt string                   `json:"createdAt"`
 	Key       string                   `json:"key"`
 	Type      string                   `json:"type"`
-	Data      map[string]interface{}   `json:"data"`
+	Data      any                      `json:"data"`
 	Leases    map[string]AddressResult `json:"leases"`
 }
 

@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -31,14 +30,14 @@ type AssignResource struct {
 }
 
 type assignModel struct {
-	ID        types.String `tfsdk:"id"`
-	Region    types.List   `tfsdk:"region"`
-	Host      types.String `tfsdk:"host"`
-	Key       types.String `tfsdk:"key"`
-	Type      types.String `tfsdk:"type"`
-	Data      types.Map    `tfsdk:"data"`
-	CreatedAt types.String `tfsdk:"created_at"`
-	Leases    types.Map    `tfsdk:"leases"`
+	ID        types.String  `tfsdk:"id"`
+	Region    types.List    `tfsdk:"region"`
+	Host      types.String  `tfsdk:"host"`
+	Key       types.String  `tfsdk:"key"`
+	Type      types.String  `tfsdk:"type"`
+	Data      types.Dynamic `tfsdk:"data"`
+	CreatedAt types.String  `tfsdk:"created_at"`
+	Leases    types.Map     `tfsdk:"leases"`
 }
 
 func (r *AssignResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -84,12 +83,11 @@ func (r *AssignResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"data": schema.MapAttribute{
-				MarkdownDescription: "Arbitrary data payload",
+			"data": schema.DynamicAttribute{
+				MarkdownDescription: "Arbitrary JSON payload",
 				Optional:            true,
-				ElementType:         types.StringType,
-				PlanModifiers: []planmodifier.Map{
-					mapplanmodifier.RequiresReplace(),
+				PlanModifiers: []planmodifier.Dynamic{
+					requiresReplaceDynamic(),
 				},
 			},
 			"created_at": schema.StringAttribute{
@@ -129,12 +127,18 @@ func (r *AssignResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	dataMap := map[string]interface{}{}
+	var data any
 	if !plan.Data.IsNull() {
-		resp.Diagnostics.Append(plan.Data.ElementsAs(ctx, &dataMap, true)...)
-		if resp.Diagnostics.HasError() {
+		if plan.Data.IsUnknown() {
+			resp.Diagnostics.AddError("Invalid data", "data must be known during apply")
 			return
 		}
+		converted, err := dynamicToJSONCompatible(plan.Data)
+		if err != nil {
+			resp.Diagnostics.AddError("Invalid data", err.Error())
+			return
+		}
+		data = converted
 	}
 
 	createResp, err := r.client.CreateAssign(ctx, zeusapi.AssignCreateRequest{
@@ -142,7 +146,7 @@ func (r *AssignResource) Create(ctx context.Context, req resource.CreateRequest,
 		Host:   plan.Host.ValueString(),
 		Key:    plan.Key.ValueString(),
 		Type:   plan.Type.ValueString(),
-		Data:   dataMap,
+		Data:   data,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Create assign failed", err.Error())
@@ -217,10 +221,6 @@ func (r *AssignResource) refresh(ctx context.Context, m *assignModel) error {
 	m.Key = types.StringValue(assign.Key)
 	m.Type = types.StringValue(assign.Type)
 	m.CreatedAt = types.StringValue(assign.CreatedAt)
-
-	if assign.Data != nil {
-		m.Data, _ = types.MapValueFrom(ctx, types.StringType, assign.Data)
-	}
 
 	m.Leases = encodeLeases(assign.Leases)
 	return nil

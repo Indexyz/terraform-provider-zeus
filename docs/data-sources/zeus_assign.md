@@ -33,7 +33,7 @@ data "zeus_assign" "example" {
 ### Read-Only
 
 - `created_at` (String)
-- `data` (Map of String)
+- `data` (Dynamic)
 - `key` (String)
 - `leases` (Map of Object) (see [below for nested schema](#nestedatt--leases))
 - `type` (String)
