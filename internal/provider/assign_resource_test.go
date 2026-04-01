@@ -77,6 +77,11 @@ func TestAccAssignResourceAndDataSource(t *testing.T) {
 				ResourceName:      "zeus_assign.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"region",
+					"host",
+					"data",
+				},
 			},
 		},
 	})

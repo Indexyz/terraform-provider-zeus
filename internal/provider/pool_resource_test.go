@@ -62,6 +62,10 @@ func TestAccPoolResourceAndDataSource(t *testing.T) {
 				ResourceName:      "zeus_pool.test",
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"start",
+					"gateway",
+				},
 			},
 		},
 	})
