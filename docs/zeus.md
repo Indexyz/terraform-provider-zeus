@@ -55,13 +55,27 @@ TypeScript: `type PoolInfo = Record<string, { size: number; used: number; friend
   - `begin: string` 起始 IP（点分十进制）
   - `end: string` 结束 IP（点分十进制）
   - `gateway: string` 网关 IP
-  - `state: AllocateState[]` 分配状态数组（与池大小一致，取值 0/1/2）
+  - `state: AllocateState[]` 分配状态数组（可能短于 `size`；未包含部分视为未分配）
 
 ### 按池 ID 获取详情
 - 方法/路径: `GET /pool/id/:id`
 - 路径参数: `id: string`
 - 响应: `200` `PoolDetail`
   - 字段同上（`PoolDetail`）
+
+AllocateState:
+- `0` 未分配（NotAllocated）
+- `1` 已分配（Allocated）
+- `2` 禁用（Disabled）
+
+### 手动修复池分配位图（Reconcile）
+- 方法/路径: `POST /pool/:id/reconcile`
+- 说明: 管理操作；当 lease 被“带外删除/清理”后，`pool.state.allocated` 可能与数据库中实际 leases 不一致，导致地址无法再次分配；该接口用于手动重建 `pool.state.allocated`
+- 路径参数: `id: string`
+- 响应:
+  - 成功: `200` `PoolDetail`（返回修复后的池详情）
+  - 池不存在: `404` `{ "error": string }`
+  - 缺少 `id`: `400` `{ "error": string }`
 
 ## 资源: 区域 (Region)
 
@@ -137,7 +151,7 @@ TypeScript: `type PoolInfo = Record<string, { size: number; used: number; friend
 - 方法/路径: `DELETE /vm/:host/:id`
 - 路径参数:
   - `host: string`
-  - `id: number`（对应该主机上的 VM 数值 ID）
+  - `id: number`
 - 响应: `204 No Content`
 
 说明：删除操作会通过 Assign 释放其所有租约并移除对应记录。
@@ -175,22 +189,55 @@ TypeScript: `type PoolInfo = Record<string, { size: number; used: number; friend
 
 ### 分配端口
 - 方法/路径: `POST /port`
+- 请求头: `X-Portd-Host: string`（可选，端口作用域 Host；未提供时使用 `Default`）
 - 请求体: `AssignPortRequest`
-  - `host: string`（所属主机标识）
-  - `virtualMachine: number`（主机上的 VM 数值 ID）
+  - `assignId: string`（已存在 VM 分配记录的 ID）
   - `targetPort: number`
   - `service: string`
-- 响应: `200` `{ port: number }`
+- 约束: `assignId` 必须指向一个已存在的 VM assign 记录
+- 响应: `200` `{ id: string; port: number }`
+
+### 按资源 ID 查询端口
+- 方法/路径: `GET /port/id/:id`
+- 路径参数:
+  - `id: string`（端口资源 ID，作为 opaque string 处理）
+- 说明: 该接口按资源 ID 直接查询，不依赖 `X-Portd-Host`
+- 响应: `200` `PortInfo`
+  - `id: string`
+  - `assignId: string`
+  - `host: string`
+  - `port: number`
+  - `targetPort: number`
+  - `service: string`
+  - `createdAt: string`
+- 未找到: `404`
+
+### 按资源 ID 删除端口
+- 方法/路径: `DELETE /port/id/:id`
+- 路径参数:
+  - `id: string`（端口资源 ID，作为 opaque string 处理）
+- 说明: 该接口按资源 ID 直接删除，不依赖 `X-Portd-Host`
+- 响应: `204`（成功）
+- 未找到: `404`
+
+### 取消分配端口
+- 方法/路径: `DELETE /port/:port`
+- 请求头: `X-Portd-Host: string`（可选，端口作用域 Host；未提供时使用 `Default`）
+- 路径参数:
+  - `port: number`
+- 响应: `204`（成功）
 
 ### 查询 VM 已分配端口
-- 方法/路径: `GET /ports/:host/:id`
+- 方法/路径: `GET /ports/:scopeHost/:assignId`
 - 路径参数:
-  - `host: string`
-  - `id: number`（主机上的 VM 数值 ID）
+  - `scopeHost: string`（端口作用域 Host）
+  - `assignId: string`（VM 分配记录 ID，即 `assigns.id`）
 - 响应: `200` `AssignResponse[]`
 
 ### 查询所有端口转发规则
-- 方法/路径: `GET /ports`
+- 方法/路径: `GET /ports/:scopeHost`
+- 路径参数:
+  - `scopeHost: string`（端口作用域 Host）
 - 响应: `200` `ForwardRule[]`
   - `inPort: number`
   - `outPort: number`
@@ -244,6 +291,7 @@ TypeScript: `type PoolInfo = Record<string, { size: number; used: number; friend
 - 路径参数: `id: string`
 - 响应: `200` `AssignInfo`
   - `id, createdAt, key, type, data, leases: Record<string, AddressResult>`
+  - 未找到：`404` `{ "error": "assign not found" }`（包括 assign 不存在或引用 lease 已失效）
 
 ### 释放分配中的区域地址
 - 方法/路径: `DELETE /assign/:id/region/:region`
@@ -256,6 +304,7 @@ TypeScript: `type PoolInfo = Record<string, { size: number; used: number; friend
 - 方法/路径: `DELETE /assign/:id`
 - 路径参数: `id: string`
 - 响应: `204 No Content`
+- 说明: 该 assign 关联的端口分配记录也会一并删除，因为 `ports.assign -> assigns.id` 使用了 `ON DELETE CASCADE`
 
 ---
 
