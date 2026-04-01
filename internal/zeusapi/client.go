@@ -54,6 +54,10 @@ func NewClient(baseURL, token string, httpClient *http.Client) (*Client, error) 
 }
 
 func (c *Client) do(ctx context.Context, method, path string, payload any, out any) error {
+	return c.doWithHeaders(ctx, method, path, payload, nil, out)
+}
+
+func (c *Client) doWithHeaders(ctx context.Context, method, path string, payload any, headers map[string]string, out any) error {
 	fullURL := c.baseURL + path
 
 	var body io.Reader
@@ -72,6 +76,9 @@ func (c *Client) do(ctx context.Context, method, path string, payload any, out a
 	req.Header.Set("Content-Type", "application/json")
 	if c.token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.token)
+	}
+	for key, value := range headers {
+		req.Header.Set(key, value)
 	}
 
 	resp, err := c.httpClient.Do(req)
@@ -185,4 +192,47 @@ func (c *Client) GetAssign(ctx context.Context, id string) (AssignInfo, error) {
 
 func (c *Client) DeleteAssign(ctx context.Context, id string) error {
 	return c.do(ctx, http.MethodDelete, "/assign/"+id, nil, nil)
+}
+
+type CreatePortRequest struct {
+	AssignID   string `json:"assignId"`
+	TargetPort int64  `json:"targetPort"`
+	Service    string `json:"service"`
+	Host       string `json:"-"`
+}
+
+type CreatePortResponse struct {
+	ID   string `json:"id"`
+	Port int64  `json:"port"`
+}
+
+type PortInfo struct {
+	ID         string `json:"id"`
+	AssignID   string `json:"assignId"`
+	Host       string `json:"host"`
+	Port       int64  `json:"port"`
+	TargetPort int64  `json:"targetPort"`
+	Service    string `json:"service"`
+	CreatedAt  string `json:"createdAt"`
+}
+
+func (c *Client) CreatePort(ctx context.Context, req CreatePortRequest) (CreatePortResponse, error) {
+	var resp CreatePortResponse
+	headers := map[string]string{}
+	if req.Host != "" {
+		headers["X-Portd-Host"] = req.Host
+	}
+
+	err := c.doWithHeaders(ctx, http.MethodPost, "/port", req, headers, &resp)
+	return resp, err
+}
+
+func (c *Client) GetPortByID(ctx context.Context, id string) (PortInfo, error) {
+	var resp PortInfo
+	err := c.do(ctx, http.MethodGet, "/port/id/"+id, nil, &resp)
+	return resp, err
+}
+
+func (c *Client) DeletePortByID(ctx context.Context, id string) error {
+	return c.do(ctx, http.MethodDelete, "/port/id/"+id, nil, nil)
 }

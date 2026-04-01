@@ -20,11 +20,13 @@ provider "zeus" {
 
 - `zeus_pool`
 - `zeus_assign`
+- `zeus_port`
 
 ## Supported Data Sources
 
 - `zeus_pool` (lookup by `id`)
 - `zeus_assign` (lookup by `id`)
+- `zeus_port` (lookup by `id`)
 
 ## Provider Functions
 

@@ -77,6 +77,7 @@ func (p *ZeusProvider) Resources(ctx context.Context) []func() resource.Resource
 	return []func() resource.Resource{
 		NewPoolResource,
 		NewAssignResource,
+		NewPortResource,
 	}
 }
 
@@ -84,6 +85,7 @@ func (p *ZeusProvider) DataSources(ctx context.Context) []func() datasource.Data
 	return []func() datasource.DataSource{
 		NewPoolDataSource,
 		NewAssignDataSource,
+		NewPortDataSource,
 	}
 }
 
